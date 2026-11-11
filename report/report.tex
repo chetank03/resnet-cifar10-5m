@@ -83,7 +83,14 @@ Figure~\ref{fig:progress} shows the five steps that raised the public score. Eac
 
 \paragraph{Use everything we are allowed (0.874 $\to$ 0.889).} Our baseline held out 5k images for validation and used a (3,3,3) network. Training on all 50k images, adding blocks up to the 5M budget and adding CutMix gave the largest single jump. The lesson is simple but easy to skip: before anything clever, use all the data and all the capacity the rules allow.
 
-\paragraph{Train longer (0.889 $\to$ 0.899).} Doubling training from 200 to 400 epochs added a full point. Going further did not: 600, 800 and 1,200 epochs all scored at or below 400.
+\paragraph{Train longer (0.889 $\to$ 0.899).} Doubling training from 200 to 400 epochs added a full point. Going further did not: 600, 800 and 1,200 epochs all scored at or below 400. Figure~\ref{fig:curve} shows where the gain comes from. Held-out accuracy rises from 95.7\% at epoch 200 to 98.5\% at epoch 400, almost all of it while the cosine schedule lowers the learning rate, and the training loss falls in step. A longer schedule stretches out the same late descent rather than adding a new one.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/curve.pdf}
+\caption{Training loss (smoothed; raw values in grey) and held-out accuracy of the final recipe trained on 45k images, evaluated each epoch on the 5k images it never trained on (EMA weights, image + mirror). Most of the held-out gain comes in the second half, as the learning rate decays.}
+\label{fig:curve}
+\end{figure}
 
 \paragraph{Learn from an ensemble (0.899 $\to$ 0.902).} An ensemble of models is more accurate than any one of them, but the rules allow only a single model. Distillation lets one model learn the ensemble's averaged predictions. The version that worked used soft targets only (no hard labels) and showed the teachers the same augmented image as the student \citep{beyer2022}. Earlier variants scored lower, including a higher temperature (0.888) and teachers that never saw the image they labelled (0.875).
 

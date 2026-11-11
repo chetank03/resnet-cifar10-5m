@@ -69,3 +69,21 @@ ax.set_xlim(.872, .914); ax.set_ylim(.849, .890); ax.grid(alpha=.3, lw=.5)
 ax.set_xlabel("Public score (what we chose by)"); ax.set_ylabel("Private score (final ranking)")
 fig.tight_layout(); fig.savefig("figs/private.pdf"); plt.close(fig)
 print("ok3")
+
+# 5. Training curve of the final recipe trained on 45k: training loss and held-out accuracy (5k images it never trained on)
+import csv, math
+rows = list(csv.DictReader(open("data/curve_bz45.csv")))
+ep = [int(r["epoch"]) for r in rows]; loss = [float(r["train_loss"]) for r in rows]; acc = [float(r["heldout_acc_ema"]) * 100 for r in rows]
+k = 9; sm = [sum(loss[max(0, i - k):i + k + 1]) / len(loss[max(0, i - k):i + k + 1]) for i in range(len(loss))]
+fig, ax = plt.subplots(figsize=(3.3, 2.15))
+ax.plot(ep, loss, color=GREY, lw=.5, alpha=.6); ax.plot(ep, sm, color=SEED, lw=1.3, label="training loss")
+ax.set_xlabel("Epoch"); ax.set_ylabel("Training loss", color=SEED); ax.set_ylim(0, 0.6); ax.set_xlim(0, 400)
+ax2 = ax.twinx(); ax2.spines["top"].set_visible(False)
+ax2.plot(ep, acc, color=HOT, lw=1.3, label="held-out accuracy"); ax2.set_ylim(90, 100); ax2.set_ylabel("Held-out accuracy (%)", color=HOT)
+ax2.plot(ep, [90 + 9 * (1 + math.cos(math.pi * e / 400)) / 2 for e in ep], color="black", lw=.7, ls=":", label="learning rate (scaled)")
+for e in (200, 300, 400):
+    a = acc[ep.index(e)]; ax2.annotate(f"{a:.1f}", (e, a), xytext=(-4, 6) if e < 400 else (-14, -12), textcoords="offset points", fontsize=6.5, color=HOT)
+h1, l1 = ax.get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels()
+ax.legend(h1 + h2, l1 + l2, frameon=False, fontsize=6, loc="lower center", bbox_to_anchor=(.5, 1.0), ncol=3, handlelength=1.5, columnspacing=1)
+fig.tight_layout(); fig.savefig("figs/curve.pdf"); plt.close(fig)
+print("ok4")
