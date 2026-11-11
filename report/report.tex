@@ -48,7 +48,7 @@ We kept the model family fixed and spent our effort on data, training and evalua
 \item \textbf{General:} random crops and flips, TrivialAugment \citep{muller2021} and small random erasing \citep{zhong2020}.
 \item \textbf{Mixing:} CutMix \citep{yun2019}, which pastes a patch of one image into another and mixes the labels.
 \item \textbf{Shift-targeted:} Gaussian blur on 20\% of images and zoom-out on 30\%, which shrinks the object inside the frame.
-\item \textbf{Distillation:} the model learns to match the averaged predictions of four same-size teachers, following the ``patient and consistent'' setup of \citet{beyer2022}.
+\item \textbf{Distillation:} the model learns to match the averaged predictions of four same-size teachers \citep{hinton2015}, following the ``patient and consistent'' setup of \citet{beyer2022}.
 \end{itemize}
 At test time we average predictions over the image, its mirror image and small shifts.
 
@@ -148,7 +148,7 @@ Besides the milestones above, we followed six lines of work. Each started from a
 \end{enumerate}
 None of these improved the public score. The next three sections explain why we think so.
 
-\paragraph{Architecture sizes.} The 5M cap can be spent on depth, on width, or on a more elaborate block, so we tried all three (Table~\ref{tab:arch}). Our baseline left about 0.7M parameters unused, and spending them on an extra block in the first two stages was the single clearest architecture gain. Beyond that the shape of the network mattered little. A wider, shallower network with almost the same count scored lower, a Wide ResNet lower still, and Shake-Shake blocks, which cost 1,800 epochs to train, landed within noise of the plain ResNet. We therefore fixed the architecture early and spent the rest of our time on data and training. The one model that clearly beat these was a 36.7M-parameter network far over the budget, which we could only use as a distillation teacher.
+\paragraph{Architecture sizes.} The 5M cap can be spent on depth, on width, or on a more elaborate block, so we tried all three (Table~\ref{tab:arch}). Our baseline left about 0.7M parameters unused, and spending them on an extra block in the first two stages was the single clearest architecture gain. Beyond that the shape of the network mattered little. A wider, shallower network with almost the same count scored lower, a Wide ResNet \citep{zagoruyko2016} lower still, and Shake-Shake blocks, which cost 1,800 epochs to train, landed within noise of the plain ResNet. We therefore fixed the architecture early and spent the rest of our time on data and training. The one model that clearly beat these was a 36.7M-parameter network far over the budget, which we could only use as a distillation teacher.
 
 \begin{table}[t]
 \centering\small
@@ -312,7 +312,7 @@ A 4.7M-parameter ResNet trained from scratch reaches 98.6\% on held-out training
 \bibitem[Foret et al.(2021)]{foret2021} Foret, P.; Kleiner, A.; Mobahi, H.; and Neyshabur, B. 2021. Sharpness-aware minimization for efficiently improving generalization. In \textit{ICLR}.
 \bibitem[Gastaldi(2017)]{gastaldi2017} Gastaldi, X. 2017. Shake-Shake regularization. \textit{arXiv:1705.07485}.
 \bibitem[He et al.(2016)]{he2016} He, K.; Zhang, X.; Ren, S.; and Sun, J. 2016. Deep residual learning for image recognition. In \textit{CVPR}.
-\bibitem[Hendrycks et al.(2020)]{hendrycks2020} Hendrycks, D.; Mu, N.; Cubuk, E.~D.; Zoph, B.; Gilmer, J.; and Lakshminarayanan, B. 2020. AugMix. In \textit{ICLR}.
+\bibitem[Hendrycks et al.(2020)]{hendrycks2020} Hendrycks, D.; Mu, N.; Cubuk, E.~D.; Zoph, B.; Gilmer, J.; and Lakshminarayanan, B. 2020. AugMix: A simple data processing method to improve robustness and uncertainty. In \textit{ICLR}.
 \bibitem[Hinton et al.(2015)]{hinton2015} Hinton, G.; Vinyals, O.; and Dean, J. 2015. Distilling the knowledge in a neural network. \textit{arXiv:1503.02531}.
 \bibitem[Krizhevsky(2009)]{krizhevsky2009} Krizhevsky, A. 2009. Learning multiple layers of features from tiny images. Technical report, University of Toronto.
 \bibitem[Loshchilov and Hutter(2017)]{loshchilov2017} Loshchilov, I.; and Hutter, F. 2017. SGDR: Stochastic gradient descent with warm restarts. In \textit{ICLR}.
@@ -321,6 +321,7 @@ A 4.7M-parameter ResNet trained from scratch reaches 98.6\% on held-out training
 \bibitem[Recht et al.(2018)]{recht2018} Recht, B.; Roelofs, R.; Schmidt, L.; and Shankar, V. 2018. Do CIFAR-10 classifiers generalize to CIFAR-10? \textit{arXiv:1806.00451}.
 \bibitem[Szegedy et al.(2016)]{szegedy2016} Szegedy, C.; Vanhoucke, V.; Ioffe, S.; Shlens, J.; and Wojna, Z. 2016. Rethinking the Inception architecture for computer vision. In \textit{CVPR}.
 \bibitem[Yun et al.(2019)]{yun2019} Yun, S.; Han, D.; Oh, S.~J.; Chun, S.; Choe, J.; and Yoo, Y. 2019. CutMix: Regularization strategy to train strong classifiers with localizable features. In \textit{ICCV}.
+\bibitem[Zagoruyko and Komodakis(2016)]{zagoruyko2016} Zagoruyko, S.; and Komodakis, N. 2016. Wide residual networks. In \textit{BMVC}.
 \bibitem[Zhong et al.(2020)]{zhong2020} Zhong, Z.; Zheng, L.; Kang, G.; Li, S.; and Yang, Y. 2020. Random erasing data augmentation. In \textit{AAAI}.
 \end{thebibliography}
 \end{document}
