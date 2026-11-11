@@ -2,6 +2,7 @@
 
 **ECE-GY 7123 Deep Learning, Project 1 (Fall 2026), New York University**
 Team **Jugaad Net**: Chetan Kodeboyina (ck3399), Shwetanshu Raj (sr8250), Ninad Rade (nr3263)
+Repository: https://github.com/chetank03/resnet-cifar10-5m
 
 We train a ResNet with **4.70M parameters** from scratch on the 50,000 CIFAR-10 training images (no pretrained weights, no external data) for a Kaggle challenge whose hidden 2,000-image test set comes from a newer, shifted collection of images.
 
