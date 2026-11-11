@@ -23,23 +23,23 @@
 \maketitle
 
 \begin{abstract}
-We train a residual network with fewer than 5M parameters from scratch on the 50,000 CIFAR-10 training images and predict a hidden 2,000-image test set drawn from a newer, shifted collection of images. Over about 30 training runs and 33 leaderboard submissions, the public score rose from 0.874 to 0.911. The final model is a 4.70M-parameter ResNet trained for 400 epochs with strong augmentation, blur and zoom-out to target the shift, and distillation from four same-size teachers. This report describes the ideas we tested and what we learned from them. First, most of the gain came from using all the data, the full parameter budget and enough epochs. Second, held-out accuracy on training images was close to 98.5\% for every variant and did not predict the leaderboard. Third, the public score was too noisy to compare our variants. Rerunning our best recipe with two new seeds scored 0.895 and 0.898, and on the private half of the test set our selected 0.911 submission scored 0.876, below seven submissions we did not choose.
+We train a residual network with fewer than 5M parameters from scratch on the 50,000 CIFAR-10 training images and predict a hidden 2,000-image test set drawn from a newer, shifted collection of images. Over about 30 training runs and 33 leaderboard submissions, the public score rose from 0.874 to 0.911. The final model is a 4.70M-parameter ResNet trained for 400 epochs with strong augmentation, blur and zoom-out to target the shift, and distillation from four same-size teachers. This report describes the ideas we tested and what we learned from them. First, most of the gain came from using all the data, the full parameter budget and enough epochs. Second, held-out accuracy on training images was close to 98.5\% for every variant and did not predict the leaderboard. Third, neither half of the test set could rank models this close. Rerunning our best recipe with two new seeds scored 0.895 and 0.898 on public. On the private half our selected 0.911 submission scored 0.876 (rank 22), below seven submissions we did not choose, yet it has the highest accuracy of all our submissions on the full 2,000 images (0.894). Averaged over seeds on the full test set, the basics account for 0.021 of the 0.025 total gain, distillation for almost none, and blur with zoom-out for 0.004.
 \end{abstract}
 
 \section{Introduction}
 The task is CIFAR-10 classification \citep{krizhevsky2009} under three rules: a single model, at most 5M trainable parameters, trained from scratch with no external data. Models are scored on 2,000 hidden images, 200 per class. The public leaderboard uses about half of them, so each image is worth 0.001 of accuracy.
 
-What makes the task hard is that the hidden images come from a newer collection than the training images. \citet{recht2018} showed that such a collection, gathered the same way, costs CIFAR-10 models several points of accuracy for reasons that are not fully understood. Our models score about 98.5\% on held-out training images but around 0.90 on the leaderboard. So most of our work was about making a small model hold up on slightly different photos.
+What makes the task hard is that the hidden images come from a newer collection than the training images. \citet{recht2018} showed that such a collection, gathered the same way, costs CIFAR-10 models several points of accuracy for reasons that are not fully understood. Our models score about 98.5\% on held-out training images but only about 0.89 on the hidden test set. So most of our work was about making a small model hold up on slightly different photos.
 
-All local measurements in this report use a fixed 5,000-image held-out split of the training set, on models trained with the other 45,000 images. The hidden test images were never labelled by hand for model selection.
+All local measurements in this report use a fixed 5,000-image held-out split of the training set, on models trained with the other 45,000 images. The hidden test images were never used for training or for choosing between models.
 
 \paragraph{Main takeaways.}
 \begin{itemize}\setlength{\itemsep}{1pt}
-\item Most of the gain came from the basics. All 50k images, a network deep enough to use the parameter budget, CutMix and 400 epochs took the score from 0.874 to 0.899.
-\item Blur and zoom-out augmentation, aimed at the shift, produced our best public score, 0.911.
+\item Most of the gain came from the basics. All 50k images, a network deep enough to use the parameter budget, CutMix and 400 epochs took the public score from 0.874 to 0.899.
+\item Blur and zoom-out augmentation, aimed at the shift, produced our best public score, 0.911. Averaged over seeds on the full test set the gain is smaller, about 0.004.
 \item Longer training, larger teachers and stronger augmentation all scored lower.
 \item Held-out accuracy did not track the leaderboard, and seed variance ($\pm$0.01) was as large as the effects we were measuring.
-\item Choosing the final submissions by the highest public score did not work well, because public score did not predict private score.
+\item Public score did not predict private score. Seven submissions we did not select beat our pick on the private half, but our pick was the most accurate on the full test set.
 \end{itemize}
 
 \section{The Recipe in Brief}
@@ -92,9 +92,9 @@ Figure~\ref{fig:progress} shows the five steps that raised the public score.
 \label{fig:curve}
 \end{figure}
 
-\paragraph{Learn from an ensemble (0.899 $\to$ 0.902).} An ensemble of models is more accurate than any one of them, but the rules allow only a single model. Distillation lets one model learn the ensemble's averaged predictions. The version that worked used soft targets only (no hard labels) and showed the teachers the same augmented image as the student \citep{beyer2022}. Earlier variants scored lower, including a higher temperature (0.888) and teachers that never saw the image they labelled (0.875).
+\paragraph{Learn from an ensemble (0.899 $\to$ 0.902).} An ensemble of models is more accurate than any one of them, but the rules allow only a single model. Distillation lets one model learn the ensemble's averaged predictions. The version that worked used soft targets only (no hard labels) and showed the teachers the same augmented image as the student \citep{beyer2022}. Earlier variants scored lower, including a higher temperature (0.888) and teachers that never saw the image they labelled (0.875). Once the private scores were known, this step turned out to be within noise (Section~\ref{sec:noise}).
 
-\paragraph{Target the shift (0.902 $\to$ 0.911).} We measured how our models fail on degraded images (Section~\ref{sec:shift}) and found two weak spots: blur and small objects. Adding blur and zoom-out to training produced our best score.
+\paragraph{Target the shift (0.902 $\to$ 0.911).} We measured how our models fail on degraded images (Section~\ref{sec:shift}) and found two weak spots: blur and small objects. Adding blur and zoom-out to training produced our best public score.
 
 \paragraph{Check the result (0.911 $\to$ 0.895).} At the end we reran the exact 0.911 recipe with two new seeds. They scored 0.895 and 0.898. This changed how we interpret the other results (Section~\ref{sec:noise}).
 
@@ -102,7 +102,7 @@ Figure~\ref{fig:progress} shows the five steps that raised the public score.
 \label{sec:shift}
 Because newer photos can differ in sharpness and framing, we asked how the model copes with degraded versions of images it has never seen. All numbers in this section use the 5,000 held-out training images and models trained on the other 45,000.
 
-\paragraph{Distortion tests.} We applied controlled distortions (Figure~\ref{fig:distort}) and measured accuracy. Without the shift-targeted augmentation, the distilled model dropped from 98.4\% to 83.7\% under blur ($\sigma$=1.2) and to 79.1\% when the object filled only 16 pixels. Cats and dogs suffered most. Adding blur and zoom-out to training raised these to 86.9\% and 81.9\% while leaving clean accuracy unchanged (Figure~\ref{fig:robust}). On the leaderboard the same change was worth 0.009, from 0.902 to 0.911, though Section~\ref{sec:noise} shows that this gap is within seed noise.
+\paragraph{Distortion tests.} We applied controlled distortions (Figure~\ref{fig:distort}) and measured accuracy. Without the shift-targeted augmentation, the distilled model dropped from 98.4\% to 83.7\% under blur ($\sigma$=1.2) and to 79.1\% when the object filled only 16 pixels. Cats and dogs suffered most. Adding blur and zoom-out to training raised these to 86.9\% and 81.9\% while leaving clean accuracy unchanged (Figure~\ref{fig:robust}). On the public leaderboard the same change was worth 0.009, from 0.902 to 0.911. Averaged over seeds on the full test set it is worth about 0.004 (Section~\ref{sec:noise}).
 
 \begin{figure}[t]
 \centering
@@ -149,29 +149,27 @@ Besides the milestones above, we followed six lines of work. Each started from a
 None of these improved the public score. The next three sections explain why we think so.
 
 \section{Results}
-Table~\ref{tab:local} summarizes the main models and Figure~\ref{fig:uploads} shows every submission. Held-out accuracy, where we have it, barely moves; the leaderboard spans 0.874 to 0.911.
+Table~\ref{tab:local} summarizes the main models and Figure~\ref{fig:uploads} shows every submission. Held-out accuracy, where we have it, barely moves. The public leaderboard spans 0.874 to 0.911 and the private one 0.851 to 0.882.
 
 \begin{table}[t]
 \centering\small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcc}
+\begin{tabular}{lccc}
 \toprule
-Model & Held-out (45k) & Public \\
+Model & Held-out & Public & Private \\
 \midrule
-Baseline (3,3,3), 200 ep & 97.22 & 0.874 \\
-Distilled, 3 teachers & 98.56 & 0.902 \\
-36.7M teacher / its student & 97.84 / -- & -- / 0.893 \\
-\textbf{Final (blur + zoom-out)} & \textbf{98.64} & \textbf{0.911} \\
-\quad same, seed 42 & -- & 0.895 \\
-\quad same, seed 43 & -- & 0.898 \\
-\quad + grayscale & 98.70 & no gain \\
-\quad 800 epochs & -- & 0.902 \\
-\quad no CutMix & -- & 0.895 \\
-\quad ResizeMix & -- & 0.897 \\
-Shake-Shake 2$\times$40d, 1800 ep & -- & 0.897 \\
+Baseline (3,3,3), 200 ep & 97.22 & 0.874 & 0.851 \\
+Distilled, 4 teachers & 98.56 & 0.902 & 0.871 \\
+\textbf{Final (blur + zoom-out)} & \textbf{98.64} & \textbf{0.911} & 0.876 \\
+\quad same, seed 42 & -- & 0.895 & 0.877 \\
+\quad same, seed 43 & -- & 0.898 & 0.869 \\
+\quad 800 epochs & -- & 0.902 & 0.876 \\
+\quad no CutMix & -- & 0.895 & 0.866 \\
+\quad ResizeMix & -- & 0.897 & 0.877 \\
+Shake-Shake 2$\times$40d, 1800 ep & -- & 0.897 & \textbf{0.878} \\
 \bottomrule
 \end{tabular}
-\caption{Held-out accuracy (\%, 5k images, models trained on 45k, test-time averaging) and public score of the matching model trained on all 50k. ``--'': no 45k version was trained.}
+\caption{Held-out accuracy (\%, 5k images, models trained on 45k, test-time averaging), with public and private scores of the matching model trained on all 50k. ``--'': no 45k version was trained.}
 \label{tab:local}
 \end{table}
 
@@ -207,7 +205,7 @@ Balancing class counts & .891 & Below plain averaging (0.899) \\
 \label{tab:fail}
 \end{table}
 
-\paragraph{Pushing working ideas further did not help.} Longer training, more teachers and stronger augmentation had each helped in a mild form. Pushed further, they did as well on the training distribution but never better on the hidden set.
+\paragraph{Pushing working ideas further did not help.} Longer training, more teachers and stronger augmentation had each helped in a mild form. Pushed further, they did as well on the training distribution but gave no measurable gain on the hidden set.
 
 \paragraph{Stronger teachers gave weaker students.} A 36.7M-parameter teacher reached 97.84\% held-out after only 200 epochs, but its student scored 0.893, below students of our same-size teachers. One possible reason is that a small student finds it harder to match a much larger, very different network.
 
@@ -215,7 +213,7 @@ Balancing class counts & .891 & Below plain averaging (0.899) \\
 
 \section{How Much Was Noise}
 \label{sec:noise}
-\paragraph{Seeds.} Rerunning the final recipe with seeds 42 and 43 scored 0.895 and 0.898, against 0.911 for seed 41 (Figure~\ref{fig:seeds}). An earlier recipe varied by 0.005 across three seeds. Two seeds of the same recipe disagree on 72--80 of the 2,000 hidden images. That is more than our 800-epoch run (58) or ResizeMix run (68) changed relative to 0.911. So most of the ``failed'' variants in Table~\ref{tab:fail} were compared against a lucky draw, and some may be as good as the recipe's typical result.
+\paragraph{Seeds.} Rerunning the final recipe with seeds 42 and 43 scored 0.895 and 0.898, against 0.911 for seed 41 (Figure~\ref{fig:seeds}). An earlier recipe varied by 0.005 across three seeds. Two seeds of the same recipe disagree on 72--80 of the 2,000 hidden images. That is more than our 800-epoch run (58) or ResizeMix run (68) changed relative to 0.911. So most of the variants in Table~\ref{tab:fail} were compared against a high draw, and some may be as good as the recipe's typical result.
 
 \begin{figure}[t]
 \centering
@@ -224,40 +222,66 @@ Balancing class counts & .891 & Below plain averaging (0.899) \\
 \label{fig:seeds}
 \end{figure}
 
-\paragraph{Public versus private.} After the competition, Kaggle revealed each submission's score on the other half of the hidden set. We had chosen our two final submissions by public score: 0.911 and 0.902, the two highest. On the private half both scored 0.876, which ranked us 22nd (16th on public). Seven submissions we did not choose scored higher, the best at 0.882 (Figure~\ref{fig:private}). Across our 31 submissions from the full training set, the rank correlation between public and private score is only 0.18 ($p=0.34$). The private half is harder for everyone, about 0.024 lower on average, but the order of our models within it is close to random. This is known as the winner's curse. The highest public score is partly the luckiest one, so choosing by it selects luck as well as quality. The seed reruns agree with this. On private, seeds 41, 42 and 43 scored 0.876, 0.877 and 0.869.
+\paragraph{Public versus private.} After the competition, Kaggle revealed each submission's score on the other half of the hidden set. We had chosen our two final submissions by public score: 0.911 and 0.902, the two highest. On the private half both scored 0.876, which ranked us 22nd (16th on public). Seven submissions we did not choose scored higher, the best at 0.882 (Figure~\ref{fig:private}). Excluding our two earliest and weakest runs, the rank correlation between public and private score across the other 31 submissions is only 0.18 ($p=0.34$). The private half is harder for every submission, about 0.024 lower on average, but the order of our models within it is close to random.
+
+\paragraph{Why unselected submissions scored higher.} We do not think those seven were better models. Each half has about 1,000 images, so a single score has a standard error of about 0.010, and the best private score is only six images above our pick. The highest score on either half is partly the luckiest one (the winner's curse). Our 0.911 was lucky on the public half, and the submissions that beat it on private were lucky on the private half. They had ordinary public scores of 0.891 to 0.898. Averaging the two halves gives accuracy on all 2,000 images, with a standard error near 0.007. By that measure our selected submission is the best of all 33 at 0.8935, ahead of the best private scorer at 0.890 (Figure~\ref{fig:private}). Choosing by public score therefore did pick our most accurate submission. Its public score is 0.018 above its full-set accuracy, against 0.012 for a typical submission, so roughly 0.006 of the 0.911 was luck on the public half.
+
+\paragraph{What the full test set says about each step.} With both halves known, we can average seeds over 2,000 images (Table~\ref{tab:full}). The basics still account for most of the gain, 0.021 of 0.025. Distillation adds only 0.001, which is well within noise, so the 0.003 it showed on the public leaderboard was probably not real. Blur and zoom-out add about 0.004, less than half of the 0.009 seen on public. Removing CutMix costs 0.007, and 800 epochs, ResizeMix and Shake-Shake all land within about 0.001 of the final recipe's average.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+Recipe & Seeds & Public & Private & All 2,000 \\
+\midrule
+Baseline, 45k, 200 ep & 1 & 0.874 & 0.851 & 0.863 \\
++ all data, depth, CutMix & 1 & 0.889 & 0.866 & 0.878 \\
++ 400 epochs & 3 & 0.897 & 0.869 & 0.883 \\
++ distillation & 2 & 0.899 & 0.870 & 0.884 \\
++ blur and zoom-out & 3 & 0.901 & 0.874 & \textbf{0.888} \\
+\midrule
+Final recipe, no CutMix & 1 & 0.895 & 0.866 & 0.881 \\
+Final recipe, 800 epochs & 1 & 0.902 & 0.876 & 0.889 \\
+Final recipe, ResizeMix & 1 & 0.897 & 0.877 & 0.887 \\
+Shake-Shake, 1800 ep & 1 & 0.897 & 0.878 & 0.888 \\
+\bottomrule
+\end{tabular}
+\caption{Scores averaged over seeds. ``All 2,000'' is the mean of the public and private scores, which is the accuracy on the whole hidden test set.}
+\label{tab:full}
+\end{table}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figs/private.pdf}
-\caption{Public against private score for all 33 submissions. The two we selected had the best public scores but only average private scores. Shaded: the private score needed for the top 10.}
+\caption{Public against private score for all 33 submissions. The two we selected had the best public scores but only average private scores. Points on the dashed line have the same accuracy on all 2,000 images as our selected submission; no submission lies above it. Shaded: the private score needed for the top 10.}
 \label{fig:private}
 \end{figure}
 
 \paragraph{Held-out accuracy.} Our held-out split is saturated. The distilled variants we trained on 45k images differ by at most 0.15 points, about the noise of 5,000 images, while their full-data versions differ by up to 0.02 on the leaderboard. For example, grayscale augmentation was 0.06 points better held-out but gave no gain on the leaderboard.
 
-\paragraph{Hand labels.} We also produced two independent sets of labels for the hidden images to use as a local check. The two sets disagreed on 503 of 2,000 images, and neither ranked our submissions in the same order as the leaderboard (rank correlation 0.18--0.42, not significant). We did not use them to choose models.
-
 \section{What Surprised Us}
 \begin{itemize}\setlength{\itemsep}{1pt}
-\item \textbf{Our best score was largely luck.} The same recipe scored 0.911, 0.895 and 0.898 on public, and 0.876, 0.877 and 0.869 on private.
-\item \textbf{Our best public submissions were not our best private ones.} Seven unselected submissions beat them on the private half.
-\item \textbf{Robustness gains were real but small on the leaderboard.} Blur and zoom-out added 3 points under blur held-out and at most about one point on the leaderboard.
-\item \textbf{Bigger was worse.} A teacher seven times larger, and training three times longer, both gave lower scores than the simple recipe.
+\item \textbf{Our best public score was partly luck.} The same recipe scored 0.911, 0.895 and 0.898 on public, and 0.876, 0.877 and 0.869 on private.
+\item \textbf{The private ranking was as noisy as the public one.} Seven unselected submissions beat our pick on the private half, but our pick was the most accurate on the full test set.
+\item \textbf{Distillation, our most complex component, added almost nothing.} Averaged over seeds on the full test set it is worth 0.001.
+\item \textbf{Robustness gains were real but small on the test set.} Blur and zoom-out added 3 points under blur held-out and about 0.004 on the full test set.
+\item \textbf{Bigger was not better.} A teacher seven times larger gave a weaker student, and training two or three times longer gave no gain.
 \item \textbf{Cat and dog stayed the hardest pair.} They account for over a third of the final recipe's held-out errors, more than any augmentation changed.
 \end{itemize}
 
 \section{Lessons Learned}
 \begin{enumerate}\setlength{\itemsep}{1pt}
 \item \textbf{Measure the noise first.} One rerun with a new seed, done early, would have shown that differences under 0.02 cannot be read from a single submission. We would have tested fewer ideas, each with three seeds.
-\item \textbf{Do not pick final submissions by the single highest public score.} Choose the recipe with the best average over seeds, and hedge the second pick with a model that is strong for a different reason.
-\item \textbf{Get the basics right first.} Data, depth and training length gave 0.025 of our 0.037 total gain. None of the more complex ideas added as much.
+\item \textbf{Treat one leaderboard score as a noisy sample.} With 1,000 images a score has a standard error of about 0.010, so it cannot rank models that differ by less. Averaging seeds, and both halves once they were known, gave a clearer and smaller estimate of every effect.
+\item \textbf{Get the basics right first.} Data, depth, CutMix and training length gave 0.021 of our 0.025 gain on the full test set. None of the more complex ideas added as much.
 \item \textbf{A validation set from the training distribution cannot see a shift.} Held-out accuracy was saturated near 98.5\% and did not rank our models the way the leaderboard did. Testing robustness directly, with distortions, was more informative.
 \item \textbf{Look at the errors early.} The error grids showed where the model struggled (cats and dogs, small and partly hidden animals) more clearly than any single metric.
 \item \textbf{Robustness to one distortion does not guarantee robustness to a shift.} Blur and zoom-out clearly helped on degraded images, but the hidden set differs in ways we could not measure locally.
 \end{enumerate}
 
 \section{Conclusion and Future Work}
-A 4.7M-parameter ResNet trained from scratch reaches 98.6\% on held-out training images, 0.895--0.911 on the public half of the shifted hidden set and 0.869--0.882 on the private half. Most of that came from standard training practice. We could not measure the effect of our more targeted ideas, because the leaderboard was too noisy and our held-out split was too easy to separate them. With more time we would (1) run three seeds per idea and compare averages, (2) train the teachers with the same blur and zoom-out augmentation so distillation passes on robustness, and (3) average the seeds of the final recipe into one distilled model, which would reduce the seed variance we measured.
+A 4.7M-parameter ResNet trained from scratch reaches 98.6\% on held-out training images and about 0.888 on the full shifted test set, averaged over seeds (0.901 public, 0.874 private). Most of that came from standard training practice. During the competition we could not measure the effect of our more targeted ideas, because one public score was too noisy and our held-out split was too easy to separate them. The full test set later showed that those effects were small. With more time we would (1) run three seeds per idea and compare averages, (2) test whether distillation is worth its cost by comparing seed averages with and without it, and (3) average the seeds of the final recipe into one distilled model, which would reduce the seed variance we measured.
 
 \paragraph{Code.} The training script, run scripts, logs and full experiment log are included in the code archive submitted with this report.
 

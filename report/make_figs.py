@@ -10,7 +10,7 @@ plt.rcParams.update({"font.family": "serif", "font.serif": ["Times New Roman", "
 HOT, SEED, GREY = "#c0630f", "#0f6e73", "#9aa7af"
 
 # 1. Every scored upload
-up = sorted([("0.911 recipe, seed 41 (blur + zoom-out)", .911, HOT), ("800 epochs", .902, GREY), ("kd4: 3-teacher distillation", .902, GREY),
+up = sorted([("0.911 recipe, seed 41 (blur + zoom-out)", .911, HOT), ("800 epochs", .902, GREY), ("kd4: 4-teacher distillation", .902, GREY),
       ("t2, 400 ep, no KD", .899, GREY), ("AugMix instead of TrivialAugment", .899, GREY), ("Second KD round", .899, GREY),
       ("Stronger blur + zoom", .898, GREY), ("9 teachers, 1200 ep", .898, GREY), ("600 ep, no KD", .897, GREY),
       ("ResizeMix instead of CutMix", .897, GREY), ("No CutMix", .895, GREY), ("kd4, seed 201", .895, GREY), ("SAM", .895, GREY),
@@ -63,8 +63,10 @@ ax.axhspan(.886, .890, color=SEED, alpha=.10, lw=0); ax.text(.8745, .8865, "priv
 for pr, pu in D:
     sel, best = (pr, pu) in SEL, (pr, pu) == BEST
     ax.scatter(pu, pr, s=28 if (sel or best) else 14, color=HOT if sel else SEED if best else GREY, edgecolor="white", lw=.6, zorder=3)
-ax.text(.911, .8785, "selected\n(best public)", fontsize=6.2, color=HOT, ha="right")
-ax.text(.8985, .8832, "best private", fontsize=6.2, color=SEED, ha="center")
+xs = [.872, .914]; ax.plot(xs, [2 * .8935 - x for x in xs], ls="--", lw=.8, color=HOT, zorder=2)  # equal accuracy on all 2,000 images
+ax.text(.8935, .8845, "same accuracy on all\n2,000 images as our pick", fontsize=5.8, color=HOT, ha="right", va="top")
+ax.text(.9125, .8725, "selected", fontsize=6.2, color=HOT, ha="right")
+ax.text(.8995, .8802, "best private", fontsize=6.2, color=SEED, ha="left")
 ax.set_xlim(.872, .914); ax.set_ylim(.849, .890); ax.grid(alpha=.3, lw=.5)
 ax.set_xlabel("Public score (what we chose by)"); ax.set_ylabel("Private score (final ranking)")
 fig.tight_layout(); fig.savefig("figs/private.pdf"); plt.close(fig)

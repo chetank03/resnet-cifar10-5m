@@ -16,7 +16,7 @@
 |---|---|---|
 | **0.911** | `_blurzoom` (run 26) | kd4 recipe + Gaussian blur on 20% (σ 0.3–1.0) + zoom-out on 30% (60–100% size). **Best.** |
 | 0.902 | `_bz800` (HPC) | 0.911 recipe trained 800 epochs instead of 400. Lower public score than 400 epochs |
-| 0.902 | kd4 (run 10) | Student distilled from 3 same-size teachers (pure KL, T=1), CutMix, TrivialAugment, 400 ep, 10-view TTA |
+| 0.902 | kd4 (run 10) | Student distilled from 4 same-size teachers (pure KL, T=1), CutMix, TrivialAugment, 400 ep, 10-view TTA |
 | 0.899 | t2 400 ep (run 6) | No distillation, 400 epochs (seeds 14/15: 0.894/0.899) |
 | 0.899 | `_kdaug` | AugMix instead of TrivialAugment |
 | 0.899 | run 10b | Second distillation round (student added as a teacher) |
@@ -84,6 +84,8 @@ Kaggle's private score uses the other ~1,000 hidden images. We selected our two 
 - Rank correlation public vs private: 0.32 over all 33 (p = 0.07), 0.18 over the 31 full-data runs (p = 0.34). Choosing by public score selected luck.
 - Every submission lost about 0.024 from public to private; the private half is harder for everyone.
 - The 0.911 recipe across seeds 41/42/43: public 0.911 / 0.895 / 0.898, private 0.876 / 0.877 / 0.869.
+- Averaging public and private gives accuracy on all 2,000 images (standard error about 0.007). By that measure the selected `_blurzoom` is the best of all 33 (0.8935); the best private scorer is at 0.890. The submissions that beat it on private were lucky on that half, as 0.911 was on public.
+- Seed-averaged accuracy on all 2,000 images: baseline 0.863; + all data, depth, CutMix 0.878; + 400 epochs 0.883 (3 seeds); + distillation 0.884 (2 seeds); + blur and zoom-out 0.888 (3 seeds). The basics give 0.021 of the 0.025 gain, distillation about 0.001, blur and zoom-out about 0.004. No CutMix: 0.881. 800 epochs 0.889, ResizeMix 0.887, Shake-Shake 0.888.
 
 ## 2. Local evaluation (held-out 5k only)
 

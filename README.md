@@ -9,6 +9,7 @@ We train a ResNet with **4.70M parameters** from scratch on the 50,000 CIFAR-10 
 |---|---|
 | Best public Kaggle score | **0.911** (16th) |
 | Private score of that submission (final ranking) | 0.876 (22nd) |
+| Its accuracy on all 2,000 test images | 0.894, the best of our 33 submissions |
 | Held-out accuracy (5k split, same recipe trained on 45k) | 98.64% |
 | Trainable parameters | 4,697,162 (limit 5,000,000) |
 
@@ -50,11 +51,12 @@ We train a ResNet with **4.70M parameters** from scratch on the 50,000 CIFAR-10 
 ## Key findings
 
 1. **Most of the gain came from the basics.** All the data, the full parameter budget, CutMix and 400 epochs took the score from 0.874 to 0.899.
-2. **Blur and zoom-out gave the best public score (0.911).** We chose them by measuring how models fail on degraded images.
+2. **Blur and zoom-out gave the best public score (0.911).** We chose them by measuring how models fail on degraded images. Averaged over seeds on the full test set they are worth about 0.004.
 3. **Pushing working ideas further did not help.** Longer training (600–1,200 epochs), bigger teachers (36.7M parameters) and stronger augmentation all scored lower.
 4. **Held-out accuracy did not predict the leaderboard.** It was saturated near 98.6% for every distilled variant.
 5. **Seed noise is as large as most effects.** The exact 0.911 recipe scored 0.895 and 0.898 with seeds 42 and 43.
-6. **Choosing by public score did not work well.** Our two selected submissions (the best public scores) both scored 0.876 on the private half, and seven unselected submissions scored higher. Across our runs, public score barely predicted private score.
+6. **Neither half of the test set could rank models this close.** Our two selected submissions (the best public scores) both scored 0.876 on the private half, and seven unselected submissions scored higher. But each half has a standard error of about 0.010, and on all 2,000 images our selected submission is the most accurate of the 33.
+7. **Distillation added almost nothing.** Averaged over seeds on the full test set it is worth about 0.001; the basics account for 0.021 of the 0.025 total gain.
 
 The full list of experiments is in [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md).
 
