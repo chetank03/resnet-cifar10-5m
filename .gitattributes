@@ -1,0 +1,2 @@
+*.sh text eol=lf
+*.SBATCH text eol=lf

@@ -1,0 +1,30 @@
+# Course data (download from Kaggle)
+data/*
+!data/README.md
+
+# Training outputs
+*.pt
+!checkpoints/best_blurzoom.pt
+!checkpoints/best_bz45.pt
+state_*.pt
+sub_*.csv
+submission*.csv
+results/submission.csv
+kd_*.log
+pipeline.log
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# LaTeX build files
+report/*.aux
+report/*.log
+report/*.fls
+report/*.fdb_latexmk
+report/*.out
+
+# OS
+.DS_Store
+Thumbs.db
