@@ -29,17 +29,61 @@
 | 0.895 | run 8 | SAM (ρ 0.05) |
 | 0.894 | run 14 | MSE on logits instead of KL distillation |
 | 0.894 | `_kdcut` | Cutout 16×16 instead of the small random erase |
+| 0.891 | WRN-22-4 | Wide ResNet 22-4 (4.30M), CutMix, TrivialAugment, dropout, 400 ep |
 | 0.893 | run 17 | Distilled from one 36.7M WRN-sized teacher |
 | 0.892 | run 15 | Wider, shallower student (128,256,320)×(2,2,1) |
 | 0.891 | `_bteach` | Better teachers (0.911/0.902/0.898 students + t2_600ep) |
-| 0.89x | `_delay` | Delayed downsampling (strides 1,2,1) |
-| 0.89 | `_bz42`, `_bz43` | **Exact 0.911 recipe, seeds 42 and 43.** Shows 0.911 (seed 41) was a lucky draw; the recipe's typical level is about 0.89–0.90 |
-| 0.89 | `_ss40b` | Shake-Shake 26 2×40d (4.58M), 1800 ep, no blur/zoom (HPC) |
+| 0.896 | `_delay` | Delayed downsampling (strides 1,2,1) |
+| 0.898 / 0.895 | `_bz43`, `_bz42` | **Exact 0.911 recipe, seeds 43 and 42.** Shows 0.911 (seed 41) was partly a lucky draw |
+| 0.897 | `_ss40b` | Shake-Shake 26 2×40d (4.58M), 4-teacher KD, 1800 ep, seed 2 (HPC) |
 | 0.889 | t2 200 ep (run 3) | All 50k + CutMix + deeper 4-4-3 net |
 | 0.888 | run 5 | First distilled student (T=4) |
 | 0.875 | run 7 | Cross-fold distillation |
 | 0.874 | run 1 | Baseline (64,128,256)×(3,3,3), 45k, 200 ep |
 | uploaded | `_gray45` | 0.911 recipe + 10% grayscale, 45k (user: no improvement; exact score not recorded here) |
+
+## 1b. Private scores (revealed after the deadline)
+
+Kaggle's private score uses the other ~1,000 hidden images. We selected our two final submissions by public score (0.911 and 0.902); both scored **0.876 private, rank 22** (16th on public). Seven unselected submissions scored higher. The private top-10 cutoff was 0.886.
+
+| Submission | Public | Private |
+|---|---|---|
+| submission.csv, early (8 days before close) | 0.898 | **0.882** |
+| submission.csv, 4-teacher KD with 20% label loss (A_KD=0.8) | 0.897 | 0.881 |
+| `_ss40b` Shake-Shake, 1800 ep | 0.897 | 0.878 |
+| `_bz42` (0.911 recipe, seed 42) | 0.895 | 0.877 |
+| `_rmix` ResizeMix | 0.897 | 0.877 |
+| sub400_ttahbal (400 ep + class balancing) | 0.891 | 0.877 |
+| submission.csv, early | 0.894 | 0.877 |
+| **`_blurzoom` (0.911, selected)** | **0.911** | 0.876 |
+| **`_bz800` (selected)** | **0.902** | 0.876 |
+| `_delay` delayed downsampling | 0.896 | 0.876 |
+| `_zoomin` | 0.898 | 0.875 |
+| submission.csv, early | 0.894 | 0.874 |
+| `_bteach` better teachers | 0.891 | 0.873 |
+| `_blurzoom2` stronger blur/zoom | 0.898 | 0.873 |
+| t2 400 ep seed 14 | 0.894 | 0.873 |
+| kd5 | 0.899 | 0.872 |
+| submission.csv, early (two) | 0.899 / 0.893 | 0.872 |
+| kd4 | 0.902 | 0.871 |
+| submission.csv, early | 0.902 | 0.871 |
+| t2 400 ep seed 11 | 0.899 | 0.871 |
+| WRN-22-4 (4.30M) | 0.891 | 0.870 |
+| t2 600 ep | 0.897 | 0.870 |
+| `_bz43` (0.911 recipe, seed 43) | 0.898 | 0.869 |
+| SAM | 0.895 | 0.869 |
+| `_s201` (kd4 recipe, seed 201) | 0.895 | 0.868 |
+| t2 200 ep | 0.889 | 0.866 |
+| `_nomix` no CutMix | 0.895 | 0.866 |
+| t2 400 ep seed 15 | 0.899 | 0.864 |
+| first KD student | 0.888 | 0.863 |
+| submission.csv, early | 0.892 | 0.857 |
+| cross-fold KD student | 0.875 | 0.854 |
+| baseline | 0.874 | 0.851 |
+
+- Rank correlation public vs private: 0.32 over all 33 (p = 0.07), 0.18 over the 31 full-data runs (p = 0.34). Choosing by public score selected luck.
+- Every submission lost about 0.024 from public to private; the private half is harder for everyone.
+- The 0.911 recipe across seeds 41/42/43: public 0.911 / 0.895 / 0.898, private 0.876 / 0.877 / 0.869.
 
 ## 2. Local evaluation (held-out 5k only)
 
@@ -63,7 +107,7 @@ All local numbers use the first 5,000 training images after a seed-0 shuffle, wi
    - more data and a deeper net (+1.5)
    - 200 → 400 epochs (+1.0)
    - ensemble distillation (+0.3)
-   - blur + zoom-out (+0.9, but within seed noise: the same recipe scored 0.89 with seeds 42 and 43)
+   - blur + zoom-out (+0.9, but within seed noise: the same recipe scored 0.895 and 0.898 with seeds 42 and 43)
 2. **What didn't help:**
    - longer training (600, 800, 1200 epochs)
    - SAM, MSE distillation, second-round distillation, cross-fold distillation
@@ -83,7 +127,7 @@ All local numbers use the first 5,000 training images after a seed-0 shuffle, wi
 |---|---|---|
 | `_bz800` | 0.911 recipe, 800 epochs | 0.902 |
 | `_rmix` | 0.911 recipe, ResizeMix instead of CutMix | 0.897 |
-| `_bz42`, `_bz43` | exact 0.911 recipe, seeds 42 and 43 | 0.89, 0.89 |
+| `_bz42`, `_bz43` | exact 0.911 recipe, seeds 42 and 43 | 0.895, 0.898 |
 | `_zoomin` | 0.911 recipe + zoom-in crops on 30% of images | not uploaded |
 | `_nt42/43/44`, `_noteach` | 0.911 recipe without teachers | not uploaded |
 | `_bzkd` | 0.911 recipe distilled from the teacher-free models | not uploaded |
