@@ -91,11 +91,11 @@ All local numbers use the first 5,000 training images after a seed-0 shuffle, wi
 
 | Model (45k) | Held-out, 10-view TTA | clean | blur σ1.2 | downscale to 16 px | 16-px object |
 |---|---|---|---|---|---|
-| Baseline (3,3,3), 200 ep | 97.22 | — | — | — | — |
+| Baseline (3,3,3), 200 ep | 97.22 | n/a | n/a | n/a | n/a |
 | kd4 recipe (no blur/zoom), `_kd45` | 98.56 | 98.42 | 83.72 | 80.64 | 79.08 |
 | **0.911 recipe, `_bz45`** | **98.64** | 98.44 | 86.92 | 83.88 | 81.88 |
 | + 10% grayscale, `_gray45` | 98.70 | 98.52 | 87.14 | 84.02 | 82.22 |
-| 36.7M teacher, `_big45` (200 ep) | 97.84 | — | — | — | — |
+| 36.7M teacher, `_big45` (200 ep) | 97.84 | n/a | n/a | n/a | n/a |
 
 - Blur + zoom-out raises accuracy under blur by 3.2 points and on 16-px objects by 2.8, with clean accuracy unchanged.
 - Distilled variants differ by at most 0.15 held-out, while their full-data versions differ by up to 0.02 on Kaggle: held-out accuracy is saturated.

@@ -49,12 +49,12 @@ We train a ResNet with **4.70M parameters** from scratch on the 50,000 CIFAR-10 
 
 ## Key findings
 
-1. **The basics carried most of the result.** All the data, the full parameter budget, CutMix and 400 epochs took the score from 0.874 to 0.899.
-2. **Targeting the shift helped once.** Blur and zoom-out, chosen by measuring how models fail on shifted images, gave 0.911.
-3. **"More" stopped helping.** Longer training (600–1,200 epochs), bigger teachers (36.7M parameters) and stronger augmentation all scored lower.
+1. **Most of the gain came from the basics.** All the data, the full parameter budget, CutMix and 400 epochs took the score from 0.874 to 0.899.
+2. **Blur and zoom-out gave the best public score (0.911).** We chose them by measuring how models fail on degraded images.
+3. **Pushing working ideas further did not help.** Longer training (600–1,200 epochs), bigger teachers (36.7M parameters) and stronger augmentation all scored lower.
 4. **Held-out accuracy did not predict the leaderboard.** It was saturated near 98.6% for every distilled variant.
 5. **Seed noise is as large as most effects.** The exact 0.911 recipe scored 0.895 and 0.898 with seeds 42 and 43.
-6. **Picking by public score selected luck.** Our two selected submissions (the best public scores) both scored 0.876 on the private half; seven unselected submissions scored higher. Across our runs, public score barely predicted private score.
+6. **Choosing by public score did not work well.** Our two selected submissions (the best public scores) both scored 0.876 on the private half, and seven unselected submissions scored higher. Across our runs, public score barely predicted private score.
 
 The full list of experiments is in [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md).
 
