@@ -148,6 +148,26 @@ Besides the milestones above, we followed six lines of work. Each started from a
 \end{enumerate}
 None of these improved the public score. The next three sections explain why we think so.
 
+\paragraph{Architecture sizes.} The 5M cap can be spent on depth, on width, or on a more elaborate block, so we tried all three (Table~\ref{tab:arch}). Our baseline left about 0.7M parameters unused, and spending them on an extra block in the first two stages was the single clearest architecture gain. Beyond that the shape of the network mattered little. A wider, shallower network with almost the same count scored lower, a Wide ResNet lower still, and Shake-Shake blocks, which cost 1,800 epochs to train, landed within noise of the plain ResNet. We therefore fixed the architecture early and spent the rest of our time on data and training. The one model that clearly beat these was a 36.7M-parameter network far over the budget, which we could only use as a distillation teacher.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+Architecture & Params & Public & Private & All \\
+\midrule
+ResNet (3,3,3) & 4.33M & 0.874 & 0.851 & 0.863 \\
+\textbf{ResNet (4,4,3)} & \textbf{4.70M} & \textbf{0.911} & 0.876 & \textbf{0.894} \\
+Wide, shallow (2,2,1) & 4.44M & 0.892 & -- & -- \\
+Wide ResNet 22-4 & 4.30M & 0.891 & 0.870 & 0.881 \\
+Shake-Shake 26 2$\times$40d & 4.58M & 0.897 & 0.878 & 0.888 \\
+\bottomrule
+\end{tabular}
+\caption{Architectures we tried, all under the 5M cap. The wide, shallow network has stages of 128, 256 and 320 channels. Training differed between rows, so these are not clean architecture comparisons: the (3,3,3) baseline used 45k images and 200 epochs, Shake-Shake needed 1,800 epochs, and only the (4,4,3) rows use our full final recipe. ``--'': not submitted before the private scores were revealed.}
+\label{tab:arch}
+\end{table}
+
 \section{Results}
 Table~\ref{tab:local} summarizes the main models and Figure~\ref{fig:uploads} shows every submission. Held-out accuracy, where we have it, barely moves. The public leaderboard spans 0.874 to 0.911 and the private one 0.851 to 0.882. Table~\ref{tab:full} in Section~\ref{sec:noise} gives seed averages on the full test set, which is the most reliable comparison we have.
 
